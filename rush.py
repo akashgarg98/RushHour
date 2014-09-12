@@ -20,7 +20,7 @@ def fail (msg):
 GRID_SIZE = 6
 
 
-def validate_move (brd,move):
+def validate_move (brd, move):
     # FIX ME!
     # check that piece is on the board
     # check that piece placed so it can move in that direction
@@ -31,7 +31,27 @@ def validate_move (brd,move):
 
 def read_player_input (brd):
     # FIX ME!
-    return None
+
+    in_brd = []
+    for row in brd:
+        for cell in row:
+            in_brd.append(cell)
+    in_brd = set(in_board)
+
+    command = raw_input('Move name (or q)? ')
+    try:
+        assert len(command) == 3
+        assert (command[0].upper() in in_brd)
+        #assert (command[0] != '.')
+        #assert (command[1].upper() not in ('L','R', 'U', 'D'))
+        #assert (command[2] not in ('1', '2', '3', '4'))
+        move = command
+    except:
+        move = read_player_input(brd)
+
+    move = validate_move(brd, move)
+
+    return move
 
 
 def update_board (brd,move):
@@ -40,8 +60,12 @@ def update_board (brd,move):
 
 
 def print_board (brd):
-    # FIX ME!
-    print "<some output of the board>"
+
+    for i, row in enumerate(brd):
+        row_str = ' '.join(row)
+        if i == 2:
+            row_str += '  ===>'
+        print row_str
 
     
 def done (brd):
@@ -61,8 +85,14 @@ def done (brd):
 
 
 def create_initial_level ():
-    # FIX ME!
-    return None
+    initial_board = [['.', '.', '.', '.', '.', '.'],
+                     ['.', '.', '.', '.', '.', '.'],
+                     ['.', 'X', 'X', 'O', '.', '.'],
+                     ['.', 'A', 'A', 'O', '.', 'P'],
+                     ['.', 'B', '.', 'O', '.', 'P'],
+                     ['.', 'B', 'C', 'C', '.', 'P']]
+
+    return initial_board
 
 
 def main ():
