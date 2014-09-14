@@ -20,39 +20,78 @@ def fail (msg):
 GRID_SIZE = 6
 
 
+def check_left (brd, move, length):
+	return False
+
+
 def validate_move (brd, move):
     # FIX ME!
     # check that piece is on the board
     # check that piece placed so it can move in that direction
     # check that piece would be in bound
     # check that path to target position is free
-    return False
+
+    lengths = {
+    			2:('X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'), 
+            	3:('O', 'P', 'Q', 'R')
+               }
+
+    pce, drc, num = move
+    num = int(num)
+    try:
+    	assert (pce in in_brd)
+		assert (pce != '.')
+		assert (drc not in ('L','R', 'U', 'D'))
+		long_brd = [item for row in brd for item in row]
+		pos = long_brd.index(pce)
+		row = pos/6
+		col = pos%6
+		if (long_brd[pos+1] == pce) and (drc in ('L', 'R')):
+			if drc == 'L':
+				assert (col - num >= 0)
+			elif drc == 'R':
+				if pce in lengths[2]:
+					assert (col + num <= 4) 
+				elif pce in lengths[3]:
+					assert (col + num <= 3)
+		elif (long_brd[pos+1] != pce) and (drc in ('U', 'D')):
+			if drc == 'U':
+				assert (row - num >= 0)
+			elif drc == 'D':
+				if pce in lengths[2]:
+					assert (row + num <= 4) 
+				elif pce in lengths[3]:
+					assert (row + num <= 3)
+		else:
+			assert False
+
+    	return True
+    except:
+	    return False
 
 
 def read_player_input (brd):
     # FIX ME!
 
-    in_brd = []
-    for row in brd:
-        for cell in row:
-            in_brd.append(cell)
-    in_brd = set(in_board)
+    in_brd = [item for row in brd for item in row]
 
     command = raw_input('Move name (or q)? ')
+    if command == 'q':
+    	exit(0)
     try:
         assert len(command) == 3
-        assert (command[0].upper() in in_brd)
-        #assert (command[0] != '.')
-        #assert (command[1].upper() not in ('L','R', 'U', 'D'))
-        #assert (command[2] not in ('1', '2', '3', '4'))
-        move = command
+        assert (command[1].upper() in ('L','R', 'U', 'D'))
+        assert (command[2] in ('1', '2', '3', '4'))
+        move = tuple([c for c in command])
     except:
+    	print 'Invalid input.'
         move = read_player_input(brd)
 
-    move = validate_move(brd, move)
-
-    return move
-
+    if validate_move(brd, move):
+        return move
+	else:
+		print 'Invalid move.'
+		return read_player_input(brd)
 
 def update_board (brd,move):
     # FIX ME!
@@ -69,8 +108,7 @@ def print_board (brd):
 
     
 def done (brd):
-    # FIX ME!
-    return True
+    return (brd[2][4] == 'X') and (brd[2][5] == 'X')
 
 
 # initial board:
@@ -103,7 +141,7 @@ def main ():
 
     while not done(brd):
         move = read_player_input(brd)
-        brd = update_board(brd,move)
+        brd = update_board(brd, move)
         print_board(brd)
 
     print 'YOU WIN! (Yay...)\n'
