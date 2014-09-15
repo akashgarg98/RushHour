@@ -19,10 +19,30 @@ def fail (msg):
 
 GRID_SIZE = 6
 
+def rotate_left (brd, rots):
+    rotated = [row[:] for row in brd]
+    span = range(len(brd))
+    for i in range(rots):
+        rotated = [[rotated[r][c] for r in span] for c in span[::-1]]
+    return rotated
 
-def check_left (brd, move, length):
-	return False
+def check_left (brd, row, col, num, car_len):
+    if col-num >= 0:
+        path = brd[row][col-num:col]
+        return (path == ['.']*len(path))
+    return False
 
+def check_right (brd, row, col, num, car_len):
+    rotated_brd = rotate_left(brd, 2)
+    return check_left(rotated_brd, 5-row, 6-car_len-col, num, car_len)
+
+def check_up (brd, row, col, num, car_len):
+    rotated_brd = rotate_left(brd, 1)
+    return check_left(rotated_brd, 5-col, row, num, car_len)
+
+def check_down (brd, row, col, num, car_len):
+    rotated_brd = rotate_left(brd, 3)
+    return check_left(rotated_brd, col, 6-car_len-row, num, car_len)
 
 def validate_move (brd, move):
     # FIX ME!
@@ -32,74 +52,110 @@ def validate_move (brd, move):
     # check that path to target position is free
 
     lengths = {
-    			2:('X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'), 
-            	3:('O', 'P', 'Q', 'R')
+                2:('X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'),
+                3:('O', 'P', 'Q', 'R')
                }
-
-    pce, drc, num = move
-    num = int(num)
-    try:
-    	assert (pce in in_brd)
-		assert (pce != '.')
-		assert (drc not in ('L','R', 'U', 'D'))
-		long_brd = [item for row in brd for item in row]
-		pos = long_brd.index(pce)
-		row = pos/6
-		col = pos%6
-		if (long_brd[pos+1] == pce) and (drc in ('L', 'R')):
-			if drc == 'L':
-				assert (col - num >= 0)
-			elif drc == 'R':
-				if pce in lengths[2]:
-					assert (col + num <= 4) 
-				elif pce in lengths[3]:
-					assert (col + num <= 3)
-		elif (long_brd[pos+1] != pce) and (drc in ('U', 'D')):
-			if drc == 'U':
-				assert (row - num >= 0)
-			elif drc == 'D':
-				if pce in lengths[2]:
-					assert (row + num <= 4) 
-				elif pce in lengths[3]:
-					assert (row + num <= 3)
-		else:
-			assert False
-
-    	return True
-    except:
-	    return False
-
-
-def read_player_input (brd):
-    # FIX ME!
 
     in_brd = [item for row in brd for item in row]
 
+    pce, drc, num = move
+    num = int(num)
+
+    if pce in lengths[3]:
+        car_len = 3
+    else:
+        car_len = 2
+
+    try:
+        assert (pce in in_brd)
+        pos = in_brd.index(pce)
+        row = pos/6
+        col = pos%6
+        assert (pce != '.')
+        assert (drc in ('L', 'R', 'U', 'D'))
+        if (in_brd[pos+1] == pce) and (drc in ('L', 'R')):
+            if drc == 'L':
+                assert (col - num >= 0)
+                assert check_left(brd, row, col, num, car_len)
+            elif drc == 'R':
+                assert (col + num <= 6 - car_len)
+                assert check_right(brd, row, col, num, car_len)
+        elif (in_brd[pos+1] != pce) and (drc in ('U', 'D')):
+            if drc == 'U':
+                assert (row - num >= 0)
+                assert check_up(brd, row, col, num, car_len)
+            elif drc == 'D':
+                assert (row + num <= 6 - car_len)
+                assert check_down(brd, row, col, num, car_len) 
+        else:
+            assert False
+
+        return True
+    except:
+        return False
+
+
+def read_player_input (brd):
+
     command = raw_input('Move name (or q)? ')
-    if command == 'q':
-    	exit(0)
+    if command.upper() == 'Q':
+        exit(0)
     try:
         assert len(command) == 3
-        assert (command[1].upper() in ('L','R', 'U', 'D'))
+        assert (command[1].upper() in ('L', 'R', 'U', 'D'))
         assert (command[2] in ('1', '2', '3', '4'))
-        move = tuple([c for c in command])
+        move = tuple([c for c in command.upper()])
     except:
-    	print 'Invalid input.'
+        print 'Invalid input.'
         move = read_player_input(brd)
 
     if validate_move(brd, move):
+        print move
         return move
-	else:
-		print 'Invalid move.'
-		return read_player_input(brd)
+    else:
+        print 'Invalid move.'
+        return read_player_input(brd)
 
-def update_board (brd,move):
-    # FIX ME!
+def update_board (brd, move):
+
+    lengths = {
+                2:('X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'),
+                3:('O', 'P', 'Q', 'R')
+               }
+
+    in_brd = [item for row in brd for item in row]
+
+    pce, drc, num = move
+    num = int(num)
+
+    if pce in lengths[3]:
+        car_len = 3
+    else:
+        car_len = 2
+
+    pos = in_brd.index(pce)
+    row = pos/6
+    col = pos%6
+
+    for i in range(car_len):
+        if drc == 'L':
+            brd[row][col+i] = '.'
+            brd[row][col+i-num] = pce
+        elif drc == 'R':
+            brd[row][col-i+car_len-1] = '.'
+            brd[row][col-i+car_len-1+num] = pce
+        elif drc == 'U':
+            brd[row+i][col] = '.'
+            brd[row+i-num][col] = pce
+        elif drc == 'D':
+            brd[row-i+car_len-1][col] = '.'
+            brd[row-i+car_len-1+num][col] = pce
+
     return brd
 
 
 def print_board (brd):
-
+    subprocess.call('cls' if platform.system() == 'Windows' else 'clear')
     for i, row in enumerate(brd):
         row_str = ' '.join(row)
         if i == 2:
@@ -148,4 +204,6 @@ def main ():
         
 
 if __name__ == '__main__':
+    import subprocess
+    import platform
     main()
