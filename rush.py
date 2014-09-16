@@ -191,7 +191,7 @@ def update_board (brd, move):
 
 def print_board (brd, score):
     '''
-    Clear terminal and print out board.
+    Clear terminal, print out board, and show current score.
     '''
     subprocess.call('cls' if platform.system() == 'Windows' else 'clear')
     print 'Current score: ' + str(score)
@@ -255,7 +255,7 @@ def main (layout = False):
     Create and print initial board, then begin gameplay loop of
     getting player input, updating board, and printing board.
     '''
-    score = 0
+    score = 0 # score used for number of moves (less is better)
     if layout:
         brd = create_custom_level(layout)
     else:
@@ -269,7 +269,7 @@ def main (layout = False):
         score += 1
         print_board(brd, score)
 
-    print 'YOU WIN! (Yay...)\n'
+    print 'YOU WIN! (Yay...)\nSuccess in only ' + str(score) + ' moves.'
         
 
 if __name__ == '__main__':
