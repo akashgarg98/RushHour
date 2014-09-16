@@ -10,10 +10,8 @@ import platform
 # A simple puzzle game, based on the physical game of the same name 
 # by Binary Arts Corp
 #
-
-
-
-# fail somewhat gracefully
+# Devs: Jacob Kingery
+#       Philip Seger
 
 def fail (msg):
     raise StandardError(msg)
@@ -191,11 +189,12 @@ def update_board (brd, move):
     return brd
 
 
-def print_board (brd):
+def print_board (brd, score):
     '''
     Clear terminal and print out board.
     '''
     subprocess.call('cls' if platform.system() == 'Windows' else 'clear')
+    print 'Current score: ' + str(score)
     for i, row in enumerate(brd):
         row_str = ' '.join(row)
         if i == 2:
@@ -208,17 +207,6 @@ def done (brd):
     Check if X piece is in winning position.
     '''
     return (brd[2][4] == 'X') and (brd[2][5] == 'X')
-
-
-# initial board:
-# Board positions (1-6,1-6), directions 'r' or 'd'
-#
-# X @ (2,3) r
-# A @ (2,4) r
-# B @ (2,5) d
-# C @ (3,6) r
-# O @ (4,3) d
-# P @ (6,4) d
 
 
 def create_initial_level ():
@@ -267,17 +255,19 @@ def main (layout = False):
     Create and print initial board, then begin gameplay loop of
     getting player input, updating board, and printing board.
     '''
+    score = 0
     if layout:
         brd = create_custom_level(layout)
     else:
         brd = create_initial_level()
 
-    print_board(brd)
+    print_board(brd, score)
 
     while not done(brd):
         move = read_player_input(brd)
         brd = update_board(brd, move)
-        print_board(brd)
+        score += 1
+        print_board(brd, score)
 
     print 'YOU WIN! (Yay...)\n'
         
