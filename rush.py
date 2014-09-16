@@ -16,6 +16,15 @@
 def fail (msg):
     raise StandardError(msg)
 
+def get_length(pce):
+    lengths = {2:('XABCDEFGHIJK'), 3:('OPQR')}
+
+    if pce in lengths[3]:
+        return 3
+    elif pce in lengths[2]:
+        return 2
+    else:
+        fail('Invalid piece name.')
 
 GRID_SIZE = 6
 
@@ -51,20 +60,12 @@ def validate_move (brd, move):
     # check that piece would be in bound
     # check that path to target position is free
 
-    lengths = {
-                2:('X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'),
-                3:('O', 'P', 'Q', 'R')
-               }
-
     in_brd = [item for row in brd for item in row]
 
     pce, drc, num = move
     num = int(num)
 
-    if pce in lengths[3]:
-        car_len = 3
-    else:
-        car_len = 2
+    car_len = get_length(pce)
 
     try:
         assert (pce in in_brd)
@@ -118,20 +119,12 @@ def read_player_input (brd):
 
 def update_board (brd, move):
 
-    lengths = {
-                2:('X', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'),
-                3:('O', 'P', 'Q', 'R')
-               }
-
     in_brd = [item for row in brd for item in row]
 
     pce, drc, num = move
     num = int(num)
 
-    if pce in lengths[3]:
-        car_len = 3
-    else:
-        car_len = 2
+    car_len = get_length(pce)
 
     pos = in_brd.index(pce)
     row = pos/6
@@ -188,10 +181,37 @@ def create_initial_level ():
 
     return initial_board
 
+def create_custom_level (layout):
+    initial_board = [['.', '.', '.', '.', '.', '.'],
+                     ['.', '.', '.', '.', '.', '.'],
+                     ['.', '.', '.', '.', '.', '.'],
+                     ['.', '.', '.', '.', '.', '.'],
+                     ['.', '.', '.', '.', '.', '.'],
+                     ['.', '.', '.', '.', '.', '.']]
+    for i in range(len(layout)/4):
+        car = layout[4*i:4*i+4]
 
-def main ():
+        pce = car[0].upper()
+        drc = car[3].upper()
+        col = int(car[1]) - 1
+        row = int(car[2]) - 1
 
-    brd = create_initial_level()
+        car_len = get_length(pce)
+
+        for i in range(car_len):
+            if drc == 'R':
+                initial_board[row][col+i] = pce
+            elif drc == 'D':
+                initial_board[row+i][col] = pce
+
+    return initial_board
+
+def main (layout = False):
+
+    if layout:
+        brd = create_custom_level(layout)
+    else:
+        brd = create_initial_level()
 
     print_board(brd)
 
@@ -206,4 +226,8 @@ def main ():
 if __name__ == '__main__':
     import subprocess
     import platform
-    main()
+    import sys
+    if len(sys.argv) > 1:
+    	main(sys.argv[1])
+    else:
+    	main()
