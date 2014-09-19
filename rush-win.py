@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 import subprocess
 import platform
-
+import graphics as gr
+import time
 #
 # Game Programming, Level 1 Project
 #
@@ -193,34 +194,47 @@ def print_board (brd, score):
     '''
     Clear terminal, print out board, and show current score.
     '''
-    subprocess.call('cls' if platform.system() == 'Windows' else 'clear')
-    print 'Current score: ' + str(score)
-    for i, row in enumerate(brd):
-        row_str = ' '.join(row)
-        if i == 2:
-            row_str += '  ===>'
-        print row_str
+    # subprocess.call('cls' if platform.system() == 'Windows' else 'clear')
+    # print 'Current score: ' + str(score)
+    # for i, row in enumerate(brd):
+    #     row_str = ' '.join(row)
+    #     if i == 2:
+    #         row_str += '  ===>'
+    #     print row_str
 
+    span = range(len(brd))
+
+    win = gr.GraphWin('Game Board', 500, 500, autoflush=False)
+
+    for i in span:
+        for j in span:
+            r = gr.Rectangle(gr.Point(10+70*i,10+70*j), gr.Point(70*(i+1),70*(j+1)))
+            r.draw(win)
     
+    t = gr.Text(gr.Point(460, 180), 'EXIT')
+    t.setSize(24)
+    t.setTextColor('red')
+    t.draw(win)
+    
+    s = gr.Text(gr.Point(480, 490), score)
+    s.setSize(18)
+    s.setTextColor('blue')
+    s.draw(win)
+
+    c = gr.Rectangle(gr.Point(0,0), gr.Point(501,501))
+    c.setFill('white')
+    c.draw(win)
+
+    win.update()
+    time.sleep(3)
+    c.undraw()
+
+
 def done (brd):
     '''
     Check if X piece is in winning position.
     '''
     return (brd[2][4] == 'X') and (brd[2][5] == 'X')
-
-
-def create_initial_level ():
-    '''
-    Create initial hard-coded board.
-    '''
-    initial_board = [['.', '.', '.', '.', '.', '.'],
-                     ['.', '.', '.', '.', '.', '.'],
-                     ['.', 'X', 'X', 'O', '.', '.'],
-                     ['.', 'A', 'A', 'O', '.', 'P'],
-                     ['.', 'B', '.', 'O', '.', 'P'],
-                     ['.', 'B', 'C', 'C', '.', 'P']]
-
-    return initial_board
 
 def create_custom_level (layout):
     '''
@@ -256,10 +270,8 @@ def main (layout = False):
     getting player input, updating board, and printing board.
     '''
     score = 0 # score used for number of moves (less is better)
-    if layout:
-        brd = create_custom_level(layout)
-    else:
-        brd = create_initial_level()
+    layout = layout if layout else 'X23rA24rB25dC36rO43dP64d'
+    brd = create_custom_level(layout)
 
     print_board(brd, score)
 
@@ -275,6 +287,12 @@ def main (layout = False):
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
-    	main(sys.argv[1])
+        main(sys.argv[1])
     else:
-    	main()
+        main()
+
+
+
+# TODO
+# Move graphics init to create_custom_level
+# Pass around cars and use move() to move
