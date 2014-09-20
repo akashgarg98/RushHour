@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import subprocess
 import platform
-
 #
 # Game Programming, Level 1 Project
 #
@@ -12,6 +11,13 @@ import platform
 #
 # Devs: Jacob Kingery
 #       Philip Seger
+#
+# For moving a block, use blockname, direction, and number
+#                   i.e. ou2
+#
+# Assignment comments:
+# Good pace of the project, and starting with just a command line
+# implementation really helped visualize how the gui would later work
 
 def fail (msg):
     raise StandardError(msg)
