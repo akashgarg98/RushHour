@@ -132,12 +132,20 @@ def validate_move (brd, move):
         return False  # Move failed tests and is invalid
 
 
-def read_player_input (brd):
+def read_player_input (brd, gr_obs):
     '''
     Get command from player, do preliminary 
     validation, and do full validation.
     '''
-    command = raw_input('Move name (or q)? ')
+    # command = raw_input('Move name (or q)? ')
+    e = gr_obs['entry']
+    w = gr_obs['warning']
+
+    while gr_obs['win'].checkKey() != 'Return':
+        time.sleep(.1)
+
+    command = e.getText()
+    e.setText('')
 
     if command.upper() == 'Q':
         exit(0)  # Quit on q or Q
@@ -148,16 +156,16 @@ def read_player_input (brd):
         assert (command[2] in ('1', '2', '3', '4'))  # Continue if distance is possibly valid
         move = tuple([c for c in command.upper()])  # Package as tuple
     except:
-        print 'Invalid input.'
-        move = read_player_input(brd)  # If invalid input, ask for a new move
+        w.setText('Invalid input.')
+        move = read_player_input(brd, gr_obs)  # If invalid input, ask for a new move
 
     if validate_move(brd, move):
         return move
     else:
-        print 'Invalid move.'
-        return read_player_input(brd)  # If invalid move, ask for a new move
+        w.setText('Invalid move.')
+        return read_player_input(brd, gr_obs)  # If invalid move, ask for a new move
 
-def update_board (brd, move):
+def update_board (brd, move, gr_obs):
     '''
     Update brd to reflect validated move.
     '''
@@ -172,39 +180,43 @@ def update_board (brd, move):
     row = pos/6
     col = pos%6
 
+    dx, dy = 0, 0
+
     for i in range(car_len):
         # Write . over old positions and pce over new positions
         if drc == 'L':
+            dx = -70
             brd[row][col+i] = '.'
             brd[row][col+i-num] = pce
         elif drc == 'R':
+            dx = 70
             brd[row][col-i+car_len-1] = '.'
             brd[row][col-i+car_len-1+num] = pce
         elif drc == 'U':
+            dy = -70
             brd[row+i][col] = '.'
             brd[row+i-num][col] = pce
         elif drc == 'D':
+            dy = 70
             brd[row-i+car_len-1][col] = '.'
             brd[row-i+car_len-1+num][col] = pce
+
+    car_ob = gr_obs[pce]
+    for ob in car_ob:
+        ob.move(dx*num, dy*num)
 
     return brd
 
 
-def print_board (brd, score):
+def render_initial_board (brd, score):
     '''
     Clear terminal, print out board, and show current score.
     '''
-    # subprocess.call('cls' if platform.system() == 'Windows' else 'clear')
-    # print 'Current score: ' + str(score)
-    # for i, row in enumerate(brd):
-    #     row_str = ' '.join(row)
-    #     if i == 2:
-    #         row_str += '  ===>'
-    #     print row_str
-
     span = range(len(brd))
+    gr_obs = dict()
 
     win = gr.GraphWin('Game Board', 500, 500, autoflush=False)
+    gr_obs['win'] = win
 
     for i in span:
         for j in span:
@@ -214,21 +226,53 @@ def print_board (brd, score):
     t = gr.Text(gr.Point(460, 180), 'EXIT')
     t.setSize(24)
     t.setTextColor('red')
-    t.draw(win)
-    
+    t.draw(win)    
+
     s = gr.Text(gr.Point(480, 490), score)
     s.setSize(18)
     s.setTextColor('blue')
     s.draw(win)
+    gr_obs['score'] = s
 
-    c = gr.Rectangle(gr.Point(0,0), gr.Point(501,501))
-    c.setFill('white')
-    c.draw(win)
+    e = gr.Entry(gr.Point(250, 480), 5)
+    e.draw(win)
+    gr_obs['entry'] = e
+
+    w = gr.Text(gr.Point(250, 450), '')
+    w.draw(win)
+    gr_obs['warning'] = w
+
+    in_brd = [item for row in brd for item in row]
+    brd_set = set(in_brd)
+    brd_set.discard('.')
+
+
+    for pce in brd_set:
+        car_len = get_length(pce)
+
+        pos = in_brd.index(pce)
+        row = pos/6
+        col = pos%6
+
+        if (in_brd[pos+1] == pce):
+            c = gr.Rectangle(gr.Point(10+70*col,10+70*row), gr.Point(70*(col+car_len), 70*(row+1)))
+        else:
+            c = gr.Rectangle(gr.Point(10+70*col,10+70*row), gr.Point(70*(col+1), 70*(row+car_len)))
+
+        if pce == 'X':
+            c.setFill('red')
+        elif car_len == 2:
+            c.setFill('blue')
+        else:
+            c.setFill('green')
+        l = gr.Text(c.getCenter(), pce)
+        c.draw(win)
+        l.draw(win)
+        gr_obs[pce] = (c, l) 
 
     win.update()
-    time.sleep(3)
-    c.undraw()
 
+    return gr_obs
 
 def done (brd):
     '''
@@ -264,7 +308,7 @@ def create_custom_level (layout):
 
     return initial_board
 
-def main (layout = False):
+def main (layout=False):
     '''
     Create and print initial board, then begin gameplay loop of
     getting player input, updating board, and printing board.
@@ -273,16 +317,18 @@ def main (layout = False):
     layout = layout if layout else 'X23rA24rB25dC36rO43dP64d'
     brd = create_custom_level(layout)
 
-    print_board(brd, score)
+    gr_obs = render_initial_board(brd, score)
 
     while not done(brd):
-        move = read_player_input(brd)
-        brd = update_board(brd, move)
+        move = read_player_input(brd, gr_obs)
+        brd = update_board(brd, move, gr_obs)
         score += 1
-        print_board(brd, score)
+        gr_obs['score'].setText(score)
+        gr_obs['warning'].setText('')
 
-    print 'YOU WIN! (Yay...)\nSuccess in only ' + str(score) + ' moves.'
-        
+    gr_obs['warning'].setText('You won in only {} moves! Press any key to quit.'.format(score))
+    gr_obs['win'].getKey()
+    time.sleep(.5)
 
 if __name__ == '__main__':
     import sys
